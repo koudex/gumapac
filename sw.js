@@ -2,8 +2,6 @@ const CACHE_NAME = 'chemeq-cache-v4';
 const ASSETS_TO_CACHE = [
   '/', // Root path (usually serves balancer.html)
   'index.html',
-  'balancer.css',
-  'balancer.js',
   'FiraCode-Regular.ttf',
   'manifest.json', // Add manifest file
   'icon-192x192.png', // Add icons
