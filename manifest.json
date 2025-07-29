@@ -1,7 +1,7 @@
 {
   "name": "Gumapac",
   "short_name": "Gumapac",
-  "start_url": "index.html",
+  "start_url": "/gumapac",
   "display": "standalone",
   "background_color": "#1E1E1E",
   "theme_color": "#272727",
