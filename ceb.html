@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Equation Balancer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @font-face {
+      font-family: "Fira Code";
+      src: url("FiraCode-Regular.ttf") format("truetype");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    :root {
+      --bg-color: #121a24;
+      --primary: #1e2a3a;
+      --secondary: #2a3a4e;
+      --text-color: #e0f2fe;
+      --accent: #38bdf8;
+      --accent-dark: #0ea5e9;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+      --info: #60a5fa;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --light-shadow: rgba(255, 255, 255, 0.05);
+      --border-radius: 12px;
+      --transition: all 0.2s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Fira Code', monospace;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--primary);
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 20px var(--shadow);
+      margin-top: 0px;
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h1 i {
+      font-size: 1.5rem;
+    }
+
+    .equation-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .equation-part {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .equation-label {
+      font-size: 1rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .equation-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      color: var(--text-color);
+      background: var(--secondary);
+      box-shadow: inset 3px 3px 5px var(--shadow),
+                  inset -3px -3px 5px var(--light-shadow);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .equation-input:focus {
+      box-shadow: inset 3px 3px 5px var(--shadow),
+                  inset -3px -3px 5px var(--light-shadow),
+                  0 0 0 2px var(--accent);
+    }
+    
+    .arrow {
+      text-align: center;
+      margin: 10px 0;
+      color: var(--accent);
+      font-size: 1.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .tool-btn {
+      background: var(--secondary);
+      color: var(--text-color);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 2px 2px 4px var(--shadow),
+                  -2px -2px 4px var(--light-shadow);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tool-btn:hover {
+      background: var(--accent);
+      color: var(--bg-color);
+    }
+
+    .tool-btn i {
+      font-size: 0.9rem;
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--bg-color);
+      background: var(--accent);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 3px 3px 6px var(--shadow),
+                  -3px -3px 6px var(--light-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      color: var(--text-color);
+      background: var(--secondary);
+      box-shadow: inset 3px 3px 5px var(--shadow),
+                  inset -3px -3px 5px var(--light-shadow);
+      min-height: 80px;
+    }
+
+    .balanced-equation {
+      font-size: 1.1rem;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      font-size: 0.9rem;
+      font-weight: bold;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      max-width: 90%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+
+    .notification.success {
+      background: var(--success);
+      color: #14532d;
+    }
+
+    .notification.error {
+      background: var(--error);
+      color: #7f1d1d;
+    }
+
+    .notification.warning {
+      background: var(--warning);
+      color: #713f12;
+    }
+
+    .notification.info {
+      background: var(--info);
+      color: #1e40af;
+    }
+
+    .loader-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 26, 36, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .loader-container.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--accent);
+      border-top: 5px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .examples {
+      margin-top: 20px;
+      background: var(--secondary);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: inset 3px 3px 5px var(--shadow),
+                  inset -3px -3px 5px var(--light-shadow);
+    }
+
+    .examples h3 {
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .example-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      text-align: left;
+      padding: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .example-btn:hover {
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    /* Detailed solution styles */
+    .solution-toggle {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .toggle-btn {
+      background: var(--secondary);
+      color: var(--accent);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .toggle-btn:hover {
+      background: var(--accent);
+      color: var(--bg-color);
+    }
+
+    .detailed-solution {
+      margin-top: 20px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--secondary);
+      border-radius: var(--border-radius);
+    }
+
+    .detailed-solution.show {
+      max-height: 2000px;
+      padding: 15px;
+    }
+
+    .solution-section {
+      margin-bottom: 15px;
+    }
+
+    .solution-section h3 {
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+    }
+
+    .solution-section h3 i {
+      font-size: 0.9rem;
+    }
+
+    .element-counts {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 0.9rem;
+    }
+
+    .element-counts th, .element-counts td {
+      padding: 8px;
+      text-align: center;
+      border: 1px solid var(--primary);
+    }
+
+    .element-counts th {
+      background: var(--primary);
+      color: var(--accent);
+    }
+
+    .element-counts tr:nth-child(even) {
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .reaction-info {
+      background: rgba(56, 189, 248, 0.1);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border-left: 3px solid var(--accent);
+    }
+
+    .reaction-info h4 {
+      color: var(--accent);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reaction-info p {
+      font-size: 0.9rem;
+    }
+
+    .coefficient {
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .reactant {
+      color: #f472b6; /* Pink for reactants */
+    }
+
+    .product {
+      color: #34d399; /* Green for products */
+    }
+
+    .element {
+      color: var(--warning);
+    }
+
+    .step {
+      margin-bottom: 10px;
+      padding-left: 15px;
+      border-left: 2px solid var(--accent);
+    }
+
+    .step-title {
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+
+    .step-content {
+      font-size: 0.9rem;
+    }
+
+    .electron-transfer {
+      background: rgba(251, 191, 36, 0.1);
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border-left: 3px solid var(--warning);
+    }
+
+    .electron-transfer h4 {
+      color: var(--warning);
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .tool-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+      
+      .balanced-equation {
+        font-size: 1rem;
+      }
+
+      .element-counts {
+        font-size: 0.8rem;
+      }
+
+      .element-counts th, .element-counts td {
+        padding: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-atom"></i> Chemical Equation Balancer</h1>
+    
+    <div class="equation-section">
+      <div class="equation-part">
+        <label class="equation-label">Reactants (separate with +)</label>
+        <input type="text" id="reactants" class="equation-input" placeholder="e.g. H2 + O2">
+      </div>
+      
+      <div class="arrow">
+        <i class="fas fa-arrow-down"></i>
+      </div>
+      
+      <div class="equation-part">
+        <label class="equation-label">Products (separate with +)</label>
+        <input type="text" id="products" class="equation-input" placeholder="e.g. H2O">
+      </div>
+    </div>
+    
+    <button class="action-btn" onclick="balanceEquation(true)">
+      <i class="fas fa-balance-scale"></i> Balance Equation
+    </button>
+    
+    <div class="result">
+      <div class="balanced-equation" id="balanced-equation">Enter an equation to balance</div>
+      <div id="reaction-info"></div>
+      <div class="solution-toggle" id="solution-toggle" style="display: none;">
+        <button class="toggle-btn" onclick="toggleSolution()">
+          <i class="fas fa-chevron-down" id="toggle-icon"></i> Show Detailed Solution
+        </button>
+      </div>
+      <div class="detailed-solution" id="detailed-solution"></div>
+    </div>
+    
+    <div class="examples">
+      <h3><i class="fas fa-flask"></i> Example Equations</h3>
+      <div class="example-list">
+        <button class="example-btn" onclick="loadExample('H2 + O2', 'H2O', 'Combustion')">
+          <i class="fas fa-arrow-right"></i> H₂ + O₂ => H₂O
+        </button>
+        <button class="example-btn" onclick="loadExample('Fe + O2', 'Fe2O3', 'Combination')">
+          <i class="fas fa-arrow-right"></i> Fe + O₂ => Fe₂O₃
+        </button>
+        <button class="example-btn" onclick="loadExample('C3H8 + O2', 'CO2 + H2O', 'Combustion')">
+          <i class="fas fa-arrow-right"></i> C₃H₈ + O₂ => CO₂ + H₂O
+        </button>
+        <button class="example-btn" onclick="loadExample('KMnO4 + HCl', 'KCl + MnCl2 + Cl2 + H2O', 'Redox')">
+          <i class="fas fa-arrow-right"></i> KMnO₄ + HCl => KCl + MnCl₂ + Cl₂ + H₂O
+        </button>
+        <button class="example-btn" onclick="loadExample('AgNO3 + NaCl', 'AgCl + NaNO3', 'Double Displacement')">
+          <i class="fas fa-arrow-right"></i> AgNO₃ + NaCl => AgCl + NaNO₃
+        </button>
+        <button class="example-btn" onclick="loadExample('H2O2', 'H2O + O2', 'Decomposition')">
+          <i class="fas fa-arrow-right"></i> H₂O₂ => H₂O + O₂
+        </button>
+        <button class="example-btn" onclick="loadExample('Zn + CuSO4', 'ZnSO4 + Cu', 'Single Displacement')">
+          <i class="fas fa-arrow-right"></i> Zn + CuSO₄ => ZnSO₄ + Cu
+        </button>
+        <button class="example-btn" onclick="loadExample('NaOH + HCl', 'NaCl + H2O', 'Acid-Base')">
+          <i class="fas fa-arrow-right"></i> NaOH + HCl => NaCl + H₂O
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="notification" id="notification"></div>
+  
+  <div class="loader-container" id="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const reactantsInput = document.getElementById('reactants');
+    const productsInput = document.getElementById('products');
+    const balancedEquationDiv = document.getElementById('balanced-equation');
+    const reactionInfoDiv = document.getElementById('reaction-info');
+    const solutionToggle = document.getElementById('solution-toggle');
+    const detailedSolution = document.getElementById('detailed-solution');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const notification = document.getElementById('notification');
+    const loaderContainer = document.getElementById('loader-container');
+
+    // Solution toggle state
+    let solutionVisible = false;
+
+    // Toggle detailed solution
+    function toggleSolution() {
+      solutionVisible = !solutionVisible;
+      detailedSolution.classList.toggle('show', solutionVisible);
+      toggleIcon.className = solutionVisible ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+      solutionToggle.querySelector('button').textContent = solutionVisible ? 
+        ' Hide Detailed Solution' : ' Show Detailed Solution';
+      solutionToggle.querySelector('button').insertBefore(toggleIcon, solutionToggle.querySelector('button').firstChild);
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      notification.textContent = message;
+      notification.className = `notification ${type} show`;
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 5000);
+    }
+
+    // Show loader
+    function showLoader() {
+      loaderContainer.classList.add('show');
+    }
+
+    // Hide loader
+    function hideLoader() {
+      loaderContainer.classList.remove('show');
+    }
+
+    // Insert symbol at cursor position
+    function insertSymbol(symbol) {
+      const activeInput = document.activeElement;
+      if (activeInput === reactantsInput || activeInput === productsInput) {
+        const startPos = activeInput.selectionStart;
+        const endPos = activeInput.selectionEnd;
+        const currentValue = activeInput.value;
+        
+        activeInput.value = currentValue.substring(0, startPos) + symbol + currentValue.substring(endPos);
+        activeInput.selectionStart = activeInput.selectionEnd = startPos + symbol.length;
+        activeInput.focus();
+      } else {
+        reactantsInput.focus();
+        reactantsInput.value += symbol;
+      }
+    }
+
+    // Load example equation
+function loadExample(reactants, products, type) {
+  reactantsInput.value = reactants;
+  productsInput.value = products;
+  showNotification(`Example loaded (${type}). Click "Balance Equation" to see the result.`, 'info');
+}
+
+    // Random integer between two values inclusive
+    function randint(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function lcm(x, y) {
+      if ((typeof x !== 'number') || (typeof y !== 'number')) 
+       return false;
+     return (!x || !y) ? 0 : Math.abs((x * y) / gcd(x, y));
+    }
+
+    // The gcd of two numbers
+    function gcd(x, y) {
+      if (typeof x != "number" || typeof y != "number" || isNaN(x) || isNaN(y))
+        throw new Error("Invalid argument");
+      x = Math.abs(x);
+      y = Math.abs(y);
+      while (y != 0) {
+        var z = x % y;
+        x = y;
+        y = z;
+      }
+      return x;
+    }
+
+    // The gcd of a list of numbers
+    function findGCD(arr, n) {
+      let result = arr[0];
+      for (let i = 1; i < n; i++) {
+        result = gcd(arr[i], result);
+
+        if (result == 1) {
+          return 1;
+        }
+      }
+      return result;
+    }
+
+    function Matrix(numRows, numCols) {
+      this.numRows = numRows;
+      this.numCols = numCols;
+      // Initialize with zeros
+      let row = [];
+      for (var j = 0; j < numCols; j++)
+          row.push(0);
+      this.cells = []; // Main data (the matrix)
+      for (var i = 0; i < numRows; i++)
+          this.cells.push([...row]);
+
+      this.get = function(row, col) {
+        if (row >= 0 && row <= this.numRows && col >= 0 && col <= this.numCols) {
+          return this.cells[row][col]
+        }
+      }
+
+      this.set = function(row, col, value) {
+        if (row >= 0 && row <= this.numRows && col >= 0 && col <= this.numCols) {
+          this.cells[row][col] = value;
+        }
+      }
+
+      this.swap = function(row1, row2) {
+        if (row1 >= 0 && row1 <= this.numRows && row2 >= 0 && row2 <= this.numCols) {
+          let temp = this.cells[row1];
+          this.cells[row1] = this.cells[row2];
+          this.cells[row2] = temp;
+        }
+      }
+
+      this.add = function(row1, row2) {
+        return row1.map((number, index) => {
+          return number + row2[index];
+        });
+      }
+
+      this.multiply = function(row, c) {
+        return row.map(num => num*c);
+      }
+
+      this.gcdRow = function(row) {
+        return findGCD(row, row.length);
+      }
+
+      this.simplifyRow = function(row) {
+        let sign = 0;
+        for (let index = 0; index < row.length; index++) {
+          const element = row[index];
+          if (element != 0) {
+            if (element < 0) sign = -1;
+            if (element > 0) sign = 1;
+            break;
+          }
+        };
+
+        const divisor = (sign == 0 ? 1 : this.gcdRow(row) * sign);
+        return row.map(num => num / divisor);
+      }
+
+      this.gaussJordanEliminate = function() {
+        this.cells = this.cells.map(row => this.simplifyRow(row));
+
+        let num_pivots = 0;
+        for (let i = 0; i < this.numCols; i++) {
+          let curr_row = num_pivots;
+          while (curr_row < this.numRows && this.cells[curr_row][i] == 0) {
+            curr_row ++;
+          }
+          if (curr_row != this.numRows) {
+            this.swap(curr_row, num_pivots);
+            while (curr_row <= this.numRows) {
+              if (this.cells[curr_row] != null && this.cells[curr_row][i] != 0) {
+                this.simplifyRow(this.cells[curr_row]);
+                this.cells[curr_row] = this.multiply(this.cells[curr_row], lcm(this.cells[curr_row][i], this.cells[num_pivots][i]) / -this.cells[curr_row][i]);
+                this.cells[num_pivots] = this.multiply(this.cells[num_pivots], lcm(this.cells[curr_row][i], this.cells[num_pivots][i]) / this.cells[num_pivots][i]);
+                this.cells[curr_row] = this.add(this.cells[num_pivots], this.cells[curr_row]);
+              }
+              curr_row += 1;
+            }
+            num_pivots += 1;
+            this.cells = this.cells.map(row => this.simplifyRow(row));
+          }
+        }
+
+        num_pivots = 0;
+        for (let i = 0; i < this.numCols; i++) {
+          let curr_row = num_pivots;
+          while (curr_row < this.numRows && this.cells[curr_row][i] == 0) {
+            curr_row += 1;
+          }
+          if (curr_row != this.numRows) {
+            while (curr_row >= 0) {
+              if (this.cells[curr_row] != null && this.cells[curr_row][i] != 0) {
+                this.simplifyRow(this.cells[curr_row]);
+                this.cells[curr_row] = this.multiply(this.cells[curr_row], lcm(this.cells[curr_row][i], this.cells[num_pivots][i]) / -this.cells[curr_row][i]);
+                this.cells[num_pivots] = this.multiply(this.cells[num_pivots], lcm(this.cells[curr_row][i], this.cells[num_pivots][i]) / this.cells[num_pivots][i]);
+                this.cells[curr_row] = this.add(this.cells[num_pivots], this.cells[curr_row]);
+              }
+              curr_row -= 1;
+            }
+            num_pivots += 1;
+            this.cells = this.cells.map(row => this.simplifyRow(row));
+          }
+        }
+        this.cells = this.cells.map(row => this.simplifyRow(row));
+        return this.cells;
+      }
+    }
+
+    // Determine reaction type
+    function determineReactionType(left_components, right_components, total_left, total_right) {
+      // Check for combustion (hydrocarbon + O2 → CO2 + H2O)
+      const hasHydrocarbon = left_components.some(comp => comp.includes('H') && comp.includes('C'));
+      const hasOxygen = left_components.some(comp => comp === 'O2');
+      const hasCO2 = right_components.some(comp => comp === 'CO2');
+      const hasH2O = right_components.some(comp => comp === 'H2O');
+      
+      if (hasHydrocarbon && hasOxygen && hasCO2 && hasH2O) {
+        return {
+          type: "Combustion",
+          description: "A combustion reaction occurs when a hydrocarbon reacts with oxygen to produce carbon dioxide and water, releasing energy in the form of heat and light."
+        };
+      }
+      
+      // Check for combination (A + B → AB)
+      if (left_components.length === 2 && right_components.length === 1) {
+        return {
+          type: "Combination",
+          description: "A combination reaction occurs when two or more substances combine to form a single new substance."
+        };
+      }
+      
+      // Check for decomposition (AB → A + B)
+      if (left_components.length === 1 && right_components.length > 1) {
+        return {
+          type: "Decomposition",
+          description: "A decomposition reaction occurs when a compound breaks down into two or more simpler substances."
+        };
+      }
+      
+      // Check for single displacement (A + BC → AC + B)
+      const isSingleDisplacement = left_components.length === 2 && right_components.length === 2 &&
+        ((left_components[0].length === 1 || left_components[0].length === 2) && 
+         (right_components[1].length === 1 || right_components[1].length === 2));
+      
+      if (isSingleDisplacement) {
+        return {
+          type: "Single Displacement",
+          description: "A single displacement reaction occurs when one element replaces another element in a compound."
+        };
+      }
+      
+      // Check for double displacement (AB + CD → AD + CB)
+      const isDoubleDisplacement = left_components.length === 2 && right_components.length === 2 &&
+        left_components[0].length > 1 && left_components[1].length > 1 &&
+        right_components[0].length > 1 && right_components[1].length > 1;
+      
+      if (isDoubleDisplacement) {
+        return {
+          type: "Double Displacement",
+          description: "A double displacement reaction occurs when parts of two ionic compounds are exchanged, forming two new compounds."
+        };
+      }
+      
+      // Check for acid-base (HA + BOH → BA + H2O)
+      const hasAcid = left_components.some(comp => comp.startsWith('H') && comp !== 'H2O' && comp !== 'H2');
+      const hasBase = left_components.some(comp => comp.endsWith('OH') || comp === 'NH3');
+      const hasWater = right_components.includes('H2O');
+      
+      if (hasAcid && hasBase && hasWater) {
+        return {
+          type: "Acid-Base",
+          description: "An acid-base reaction occurs when an acid and a base react to form a salt and water."
+        };
+      }
+      
+      // Check for redox (any reaction with electron transfer)
+      if ('e' in total_left || 'e' in total_right) {
+        return {
+          type: "Redox",
+          description: "A redox (reduction-oxidation) reaction involves the transfer of electrons between two species."
+        };
+      }
+      
+      // Default to "Other" if no specific type is identified
+      return {
+        type: "Other",
+        description: "This reaction doesn't fit neatly into the common reaction types. It may be a complex or specialized reaction."
+      };
+    }
+
+    function balance_equation(string){
+      let left = []; // list of compounds on the LHS
+      let right = []; // list of compounds on the RHS
+      let balanced = true;
+      let output = "This equation can't be solved";
+      let solutionSteps = [];
+      let elementCounts = {};
+      let reactionType = {};
+
+      // breaks the equation into the lhs and the rhs
+      const [lhs, rhs] = string
+          .replace(/ /g,'')
+          .split(/=>|=|→|➔|➜|➙|⇌/);
+
+      // breaks the sides into compounds
+      const split_regex = /\+/g;
+      lhs.replace(/\^\d*\+/g, electron => electron.slice(0, -1) + "⊕");
+      rhs.replace(/\^\d*\+/g, electron => electron.slice(0, -1) + "⊕");
+      const left_components = lhs.split(split_regex).map(compound => compound.replace(/⊕/g, "+"));
+      const right_components = rhs.split(split_regex).map(compound => compound.replace(/⊕/g, "+"));
+
+      let chemicals = ["e"];
+
+      let total_left = {e:0}; // element totals for the left side
+      let total_right = {e:0}; // element totals for the right side
+
+      // recursive algorithm to find elements from compounds
+      const find_compound = function(component, multiplier, compound, total, chemicals) {
+        const electron_regex = /\^[0-9]*[+-](?![^\(]*\))/;
+        const element_regex = /\([A-Za-z0-9]*\)\d*|[A-Z][a-z]*[0-9]*(?=[\(A-Z]|$)/g;
+        const subscript_regex = /\d*$|.*(?!\d*$)./g;
+        const bracket_regex = /^\(|\)$/g;
+
+        if (component == "e" || component == "e-" || component == "e^-") {
+          compound.e -= 1;
+          total.e -= 1;
+          return;
+        }
+
+        let electrons = component.match(electron_regex);
+        if (electrons == null) electrons = [];
+        for (let j = 0; j < electrons.length; j++) {
+          let number = 1;
+          if (/\d+/.test(electrons[j])) {
+            [number] = electrons[j].match(/\d+/);
+          }
+          let [sign] = electrons[j].match(/[+-]/);
+          compound.e += (sign == "+" ? +number : -number) * multiplier;
+          total.e += (sign == "+" ? +number : -number) * multiplier;
+        }
+
+        component = component.replace(electron_regex, "");
+
+        let parts = component.match(element_regex); // breaks the equation into parts with a main bit and the subscript
+        for (let j = 0; j < parts.length; j++) {
+          let [main, subscript] = parts[j].match(subscript_regex); // breaks the part into a main part and the subscript
+          // checks if the equation needs to be broken further
+          if (bracket_regex.test(main)) { 
+            // recursion happens
+            find_compound(main.replace(bracket_regex, ""), multiplier * (subscript ?+subscript : 1), compound, total, chemicals);
+          }
+          else {
+            // sets the values into the data fields
+            if (compound[main] == null) {
+              compound[main] = 0;
+            }
+            compound[main] += multiplier * (subscript ? +subscript : 1)
+            if (total[main] == null) {
+              total[main] = 0;
+            }
+            total[main] += multiplier * (subscript ? +subscript : 1)
+            if (!chemicals.includes(main)) chemicals.push(main); 
+          }
+        }
+      }
+      try {
+        // gets data from the components on the lhs
+        for (let i = 0; i < left_components.length; i++) {
+          let compound = {e:0};
+          find_compound(left_components[i], 1, compound, total_left, chemicals);
+          left.push(compound);
+        }
+
+        // gets data from the components on the rhs
+        for (let i = 0; i < right_components.length; i++) {
+          let compound = {e:0};
+          find_compound(right_components[i], 1, compound, total_right, chemicals);
+          right.push(compound);
+        }
+
+        // Determine reaction type
+        reactionType = determineReactionType(left_components, right_components, total_left, total_right);
+        
+        // Add initial counts to solution steps
+        solutionSteps.push({
+          title: "Initial Element Counts",
+          content: `Before balancing, let's count the atoms of each element on both sides of the equation.`
+        });
+
+        // Create element counts table for solution
+        let elementCountsHTML = `
+          <table class="element-counts">
+            <tr>
+              <th>Element</th>
+              <th>Reactants</th>
+              <th>Products</th>
+              <th>Status</th>
+            </tr>
+        `;
+
+        // Check balance status for each element
+        let balancedElements = true;
+        for (const element of chemicals) {
+          if (element === 'e') continue;
+          
+          const leftCount = total_left[element] || 0;
+          const rightCount = total_right[element] || 0;
+          const status = leftCount === rightCount ? 'Balanced' : 'Unbalanced';
+          
+          if (status === 'Unbalanced') balancedElements = false;
+          
+          elementCountsHTML += `
+            <tr>
+              <td><span class="element">${element}</span></td>
+              <td>${leftCount}</td>
+              <td>${rightCount}</td>
+              <td style="color: ${status === 'Balanced' ? 'var(--success)' : 'var(--error)'}">${status}</td>
+            </tr>
+          `;
+        }
+
+        elementCountsHTML += `</table>`;
+        solutionSteps.push({
+          title: "Element Counts Before Balancing",
+          content: elementCountsHTML
+        });
+
+        if (!balancedElements) {
+          solutionSteps.push({
+            title: "Balancing Required",
+            content: `The equation is unbalanced. We'll use algebraic methods to find coefficients that balance the atoms on both sides.`
+          });
+        } else {
+          solutionSteps.push({
+            title: "Already Balanced",
+            content: `The equation is already balanced with all elements having equal counts on both sides.`
+          });
+        }
+
+      } catch (error) {
+        console.log(error);
+        return {
+          output: "SyntaxError: Invalid chemical formula. Check your equation for errors.",
+          solutionSteps: [],
+          reactionType: {}
+        };
+      }
+
+      const check_multiple_solutions = function(matrix) {
+        let coefficients = matrix.numCols - 1;
+        let number = 0;
+        matrix.cells.forEach(row => {
+          if (row.some(cell => cell != 0)) number ++;
+        });
+        if (number != coefficients) return true;
+      }
+
+      const get_coefficients = function(matrix) {
+        let lowest = 1;
+        matrix.cells.forEach(row => {
+          for (let index = 0; index < row.length; index++) {
+            const element = row[index];
+            if (element != 0) {
+              lowest = lcm(lowest, element);
+              break;
+            }
+          };
+        });
+        matrix.cells.forEach((row, i) => {
+          let index = 0;
+          while (index < row.length) {
+            const element = row[index];
+            if (element != 0) {
+              lowest = lcm(lowest, element);
+              break;
+            }
+            index ++;
+          }
+          matrix.cells[i] = matrix.multiply(row, lowest/(row[index] ? row[index] : 1));
+        });
+        return matrix.cells.map(row => row[matrix.numCols - 1])
+      }
+
+      // makes the output string from data
+      const make_output = function(left, right, left_co, right_co) {
+        const electron_regex = /\^[0-9]*[+-](?![^\(]*\))/g;
+        // checks and records the gcd of the data
+        let multi = findGCD([...left_co, ...right_co], [...left_co, ...right_co].length);
+
+        let out = "";
+        for (let i = 0; i < left.length; i++) {
+          // makes the subscripts subscripts
+          if (left[i] == "e") left[i] = "e<sup>-</sup>";
+
+          left[i] = left[i].replace(/[0-9]+(?![+-])/g, number => `<sub>${number}</sub>`);
+
+          left[i] = left[i].replace(electron_regex, electron => {
+            return "<sup>" + electron.slice(1) + "</sup>";
+          })
+
+          out += (left_co[i]/multi == 1 ? "" : `<span class="coefficient">${left_co[i]/multi}</span>`) + `<span class="reactant">${left[i]}</span>`;
+          out += " + ";
+        }
+        out = out.slice(0, -3);
+        out += " " + "→" + " ";
+        for (let i = 0; i < right.length; i++) {
+          // makes the subscripts subscripts
+          if (right[i] == "e") right[i] = "e<sup>-</sup>";
+
+          right[i] = right[i].replace(/[0-9]+(?![+-])/g, number => `<sub>${number}</sub>`);
+
+          right[i] = right[i].replace(electron_regex, electron => {
+            return "<sup>" + electron.slice(1) + "</sup>";
+          })
+
+          out += (right_co[i]/multi == 1 ? "" : `<span class="coefficient">${right_co[i]/multi}</span>`) + `<span class="product">${right[i]}</span>`;
+          out += " + ";
+        }
+        out = out.slice(0, -3);
+        return out;
+      } 
+
+      // checks if the equation can be solved, incomplete
+      possible = true;
+      for (const key in total_right) {
+        if (total_left[key] == null) {
+          possible = false
+        }
+      }
+      for (const key in total_left) {
+        if (total_right[key] == null) {
+          possible = false
+        }
+      }
+    
+      if (!possible) {
+        return {
+          output: "Error: The equation cannot be balanced. Check that all elements are present on both sides.",
+          solutionSteps: solutionSteps,
+          reactionType: reactionType
+        };
+      }
+
+      // create matrix columns
+      let matrix = new Matrix(chemicals.length + 1, left.length + right.length + 1);
+      for (let i = 0; i < chemicals.length; i++) {
+        const element = chemicals[i];
+        for (let j = 0; j < left.length; j++) {
+          const compound = left[j];
+          matrix.set(i+1, j, (compound[element] ? +compound[element] : 0));
+        }
+        for (let j = 0; j < right.length; j++) {
+          const compound = right[j];
+          matrix.set(i+1, j + left.length, (compound[element] ? -compound[element] : 0));
+        }
+      }
+      matrix.set(0, 0, 1);
+      matrix.set(0, matrix.numCols - 1, 1);
+
+      // Add matrix setup to solution steps
+      solutionSteps.push({
+        title: "Setting Up the Matrix",
+        content: `We set up a matrix where each row represents an element and each column represents a compound. 
+                 The numbers show how many atoms of each element are in each compound.`
+      });
+
+      matrix.gaussJordanEliminate();
+      
+      // Add matrix solution to steps
+      solutionSteps.push({
+        title: "Solving the Matrix",
+        content: `Using Gauss-Jordan elimination, we solve the matrix to find coefficients that balance all elements. 
+                 This involves row operations to simplify the matrix.`
+      });
+
+      if (check_multiple_solutions(matrix)) {
+        solutionSteps.push({
+          title: "Multiple Solutions",
+          content: "This equation has multiple possible solutions. We're showing the simplest integer solution."
+        });
+      }
+
+      let coefficients = get_coefficients(matrix);
+
+      // generates coefficients
+      let left_coefficients = coefficients.slice(0, left.length);
+      let right_coefficients = coefficients.slice(left.length, left.length + right.length);
+
+      // Add final coefficients to solution steps
+      solutionSteps.push({
+        title: "Final Coefficients",
+        content: `After solving, we found these coefficients to balance the equation: 
+                 <br>Reactants: ${left_coefficients.join(', ')}
+                 <br>Products: ${right_coefficients.join(', ')}`
+      });
+
+      // Create element counts table for solution after balancing
+      let balancedCountsHTML = `
+        <table class="element-counts">
+          <tr>
+            <th>Element</th>
+            <th>Reactants (After)</th>
+            <th>Products (After)</th>
+            <th>Status</th>
+          </tr>
+      `;
+
+      // Calculate balanced counts
+      for (const element of chemicals) {
+        if (element === 'e') continue;
+        
+        let leftCount = 0;
+        for (let i = 0; i < left.length; i++) {
+          leftCount += (left[i][element] || 0) * left_coefficients[i];
+        }
+        
+        let rightCount = 0;
+        for (let i = 0; i < right.length; i++) {
+          rightCount += (right[i][element] || 0) * right_coefficients[i];
+        }
+        
+        const status = leftCount === rightCount ? 'Balanced' : 'Error';
+        
+        balancedCountsHTML += `
+          <tr>
+            <td><span class="element">${element}</span></td>
+            <td>${leftCount}</td>
+            <td>${rightCount}</td>
+            <td style="color: ${status === 'Balanced' ? 'var(--success)' : 'var(--error)'}">${status}</td>
+          </tr>
+        `;
+      }
+
+      balancedCountsHTML += `</table>`;
+      solutionSteps.push({
+        title: "Element Counts After Balancing",
+        content: balancedCountsHTML
+      });
+
+      // Add electron transfer info if redox
+      if (reactionType.type === "Redox") {
+        solutionSteps.push({
+          title: "Electron Transfer",
+          content: `
+            <div class="electron-transfer">
+              <h4>Redox Reaction Details</h4>
+              <p>This is a redox reaction with electron transfer:</p>
+              <p>Electrons in reactants: ${total_left.e || 0}</p>
+              <p>Electrons in products: ${total_right.e || 0}</p>
+              <p>Net electron transfer: ${Math.abs((total_left.e || 0) - (total_right.e || 0))}</p>
+            </div>
+          `
+        });
+      }
+
+      output = make_output(left_components, right_components, left_coefficients, right_coefficients);
+      
+      // Reset the solution toggle state
+      solutionVisible = false;
+      detailedSolution.classList.remove('show');
+      toggleIcon.className = 'fas fa-chevron-down';
+      solutionToggle.querySelector('button').textContent = ' Show Detailed Solution';
+      solutionToggle.querySelector('button').insertBefore(toggleIcon, solutionToggle.querySelector('button').firstChild);
+      
+      return {
+        output: output,
+        solutionSteps: solutionSteps,
+        reactionType: reactionType,
+        multipleSolutions: check_multiple_solutions(matrix)
+      };
+    }
+
+    // Display detailed solution
+    function displayDetailedSolution(solutionData) {
+      let solutionHTML = '';
+      
+      /*
+      // Reaction type info
+      solutionHTML += `
+        <div class="reaction-info">
+          <h4><i class="fas fa-info-circle"></i> Reaction Type: ${solutionData.reactionType.type}</h4>
+          <p>${solutionData.reactionType.description}</p>
+        </div>
+      `;
+      */
+      
+      // Solution steps
+      solutionHTML += '<div class="solution-section">';
+      solutionHTML += '<h3><i class="fas fa-list-ol"></i> Balancing Steps</h3>';
+      
+      solutionData.solutionSteps.forEach((step, index) => {
+        solutionHTML += `
+          <div class="step">
+            <div class="step-title">Step ${index + 1}: ${step.title}</div>
+            <div class="step-content">${step.content}</div>
+          </div>
+        `;
+      });
+      
+      solutionHTML += '</div>';
+      
+      if (solutionData.multipleSolutions) {
+        solutionHTML += `
+          <div class="notification info" style="position: static; opacity: 1; transform: none; margin: 10px 0;">
+            <i class="fas fa-exclamation-triangle"></i>
+            Note: This equation has multiple possible solutions. The simplest integer solution is shown.
+          </div>
+        `;
+      }
+      
+      detailedSolution.innerHTML = solutionHTML;
+      solutionToggle.style.display = 'flex';
+    }
+
+    // Balance the equation
+    function balanceEquation(setUrl) {
+      const reactants = reactantsInput.value.trim();
+      const products = productsInput.value.trim();
+      
+      if (!reactants || !products) {
+        showNotification('Please enter both reactants and products', 'error');
+        return;
+      }
+      
+      showLoader();
+      solutionToggle.style.display = 'none';
+      detailedSolution.classList.remove('show');
+      solutionVisible = false;
+      
+      // Use setTimeout to allow UI to update before heavy computation
+      setTimeout(() => {
+        try {
+          const equation = `${reactants}→${products}`;
+          const result = balance_equation(equation);
+          
+          if (result.output.includes("Error") || result.output.includes("Warning") || result.output.includes("SyntaxError")) {
+            const type = result.output.includes("SyntaxError") ? 'error' : 
+                        result.output.includes("Warning") ? 'warning' : 'error';
+            showNotification(result.output, type);
+            balancedEquationDiv.innerHTML = "Could not balance equation";
+            reactionInfoDiv.innerHTML = '';
+          } else {
+            showNotification('Equation balanced successfully!', 'success');
+            balancedEquationDiv.innerHTML = result.output;
+            
+            // Display reaction type info
+            reactionInfoDiv.innerHTML = `
+              <div class="reaction-info">
+                <h4><i class="fas fa-info-circle"></i> Reaction Type: ${result.reactionType.type}</h4>
+                <p>${result.reactionType.description}</p>
+              </div>
+            `;
+            
+            // Display detailed solution if available
+            if (result.solutionSteps && result.solutionSteps.length > 0) {
+              displayDetailedSolution(result);
+            }
+          }
+          
+          if (setUrl) {
+            const equationParam = encodeURIComponent(equation).replace(/\+/g, "%2B");
+            window.history.pushState({}, '', `?reactants=${encodeURIComponent(reactants)}&products=${encodeURIComponent(products)}`);
+          }
+        } catch (error) {
+          console.error(error);
+          showNotification('An unexpected error occurred while balancing the equation', 'error');
+          balancedEquationDiv.innerHTML = "Error balancing equation";
+          reactionInfoDiv.innerHTML = '';
+        } finally {
+          hideLoader();
+        }
+      }, 100);
+    }
+
+    // Check URL for parameters on load
+    function checkUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const reactants = params.get('reactants');
+      const products = params.get('products');
+      
+      if (reactants) {
+        reactantsInput.value = decodeURIComponent(reactants);
+      }
+      
+      if (products) {
+        productsInput.value = decodeURIComponent(products);
+      }
+      
+      if (reactants && products) {
+        balanceEquation(false);
+      }
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', checkUrl);
+    
+    // Balance on Enter key in any input
+    document.querySelectorAll('.equation-input').forEach(input => {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          balanceEquation(true);
+        }
+      });
+    });
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
