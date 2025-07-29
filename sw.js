@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chemeq-cache-v4';
+const CACHE_NAME = 'gumapac-cache-v4';
 const ASSETS_TO_CACHE = [
   '/', // Root path (usually serves balancer.html)
   'index.html',
